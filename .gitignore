@@ -1,0 +1,26 @@
+# Data and generated artifacts (not included in the repository)
+data/
+results/
+saved_models/
+checkpoints/
+*.pth
+*.pt
+*.mat
+*.npy
+*.csv
+*.png
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+venv/
+env/
+
+# OS / editor
+.DS_Store
+.vscode/
