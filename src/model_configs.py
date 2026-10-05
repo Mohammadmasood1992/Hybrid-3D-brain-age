@@ -3,11 +3,15 @@ Architecture configurations compared in this project.
 
 Two families of 10 total models are studied:
 
-  A-E  Hybrid CNN + Transformer, all with the same parameter budget, varying
-       only how many spatial tokens the transformer attends over (2 to 392).
-       This is the main independent variable of the study: does giving the
-       transformer more (finer-grained) tokens improve age prediction and
+  A-E  Hybrid CNN + Transformer with an identical transformer and head,
+       varying how many spatial tokens the transformer attends over (2 to
+       392). This is the main independent variable of the study: does giving
+       the transformer more (finer-grained) tokens improve age prediction and
        change the accuracy/sensitivity trade-off on the ADHD holdout group?
+       A-C keep all five conv blocks, so their parameter counts are nearly
+       equal (~3.9M) and only the token count changes. D and E reach 36 and
+       392 tokens by dropping conv blocks instead, so they also have far fewer
+       parameters (~1.2M and ~0.6M) -- compare them to B and C, not to A.
   F-J  Plain 3D CNNs of varying depth and width, included as a baseline
        without any attention mechanism.
 """
@@ -61,7 +65,7 @@ CNN_3BLK_3POOL = [  # 7 x 7 x 8  = 392 tokens, one fewer conv block than C
 # ---- Plain CNN baselines (F-J) ---------------------------------------------
 # Note: ModularCNN3D uses a single conv per block, vs. the double conv used by
 # the hybrid's CNN extractor above, so parameter counts are not matched
-# across the two families -- see get_model_info()['n_params'] per model.
+# across the two families -- see get_model_info()["n_params"] per model.
 CNN_5BLK_NOATTN = [{"filters": f, "dropout": DROPOUT} for f in (16, 32, 64, 128, 256)]
 CNN_6BLK_NOATTN = [{"filters": f, "dropout": DROPOUT} for f in (16, 32, 64, 128, 256)] + [
     {"filters": 256, "dropout": DROPOUT, "pool_size": None}

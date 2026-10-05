@@ -163,6 +163,7 @@ class ModularCNN3D(nn.Module):
             "num_conv_blocks": len(self.layer_config),
             "layer_config": self.layer_config,
             "fc_config": self.fc_config_normalized,
+            "n_params": sum(p.numel() for p in self.parameters() if p.requires_grad),
         }
 
 

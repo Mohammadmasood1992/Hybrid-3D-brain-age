@@ -67,10 +67,26 @@ fixes that by excluding whole participants and families, not rows.
 
 Ten configurations, all predicting a single scalar (age):
 
-| Models | Family | What varies |
-|---|---|---|
-| A – E | Hybrid: 3D CNN feature extractor → transformer encoder → regression head | Number of pooling stages before the transformer, which controls token count (2 → 36 → 392) while the transformer and head stay fixed |
-| F – J | Plain 3D CNN → regression head | Depth and width, with no attention mechanism, as a baseline |
+| Model | Family | Conv blocks | Tokens | Parameters |
+|---|---|---|---|---|
+| A | Hybrid CNN → transformer | 5 (5 pooled) | 2 | 3.86M |
+| B | Hybrid CNN → transformer | 5 (4 pooled) | 36 | 3.86M |
+| C | Hybrid CNN → transformer | 5 (3 pooled) | 392 | 3.91M |
+| D | Hybrid CNN → transformer | 4 (4 pooled) | 36 | 1.19M |
+| E | Hybrid CNN → transformer | 3 (3 pooled) | 392 | 0.56M |
+| F | Plain 3D CNN (wide head) | 5 | – | 1.46M |
+| G | Plain 3D CNN | 6 | – | 2.99M |
+| H | Plain 3D CNN | 4 | – | 0.32M |
+| I | Plain 3D CNN | 6 | – | 4.79M |
+| J | Plain 3D CNN (SFCN-style) | 6 | – | 2.97M |
+
+The hybrid models (A–E) share the same transformer (2 layers, 4 heads,
+embedding dim 128) and regression head. **A → B → C** is the cleanest
+token-count comparison: same conv depth and almost the same parameter
+count, with only the number of pooling stages changing. D and E reach the
+same token counts as B and C by dropping conv blocks instead, so comparing
+B vs. D and C vs. E separates token count from CNN depth and model size.
+The plain CNNs (F–J) are a no-attention baseline.
 
 Both families are built from small configurable blocks (`src/models.py`), so
 an architecture is defined as a list of per-layer config dicts rather than
@@ -101,6 +117,26 @@ whether an architecture's accuracy is consistent across groups or degrades
 on the clinical subgroup, and whether that pattern tracks the transformer's
 token count.
 
+## Tests
+
+The dataset is restricted, so `tests/` checks the pipeline on synthetic data
+instead:
+
+- **Split integrity** (`tests/test_data.py`): on a synthetic multi-visit,
+  multi-member-family cohort, no participant or family appears in more than
+  one split; the ADHD test set holds every visit of every ADHD participant;
+  ADHD families are kept out of every other split; and the split is
+  reproducible for a fixed seed. One test also runs the full
+  `.mat` + `.npy` loading path end to end.
+- **Models and training** (`tests/test_models.py`): all ten architectures
+  return one age per scan for a 57×57×71 input, the hybrid models produce
+  the token counts listed above, the metric functions are correct on a
+  known case, and a two-epoch CPU training run completes.
+
+```bash
+pytest tests
+```
+
 ## Results
 
 This repository ships the code, not pre-computed results or trained weights
@@ -112,8 +148,9 @@ metrics table, and predicted-vs-actual plots) and writes it to `results/`.
 ## Repository structure
 
 ```
-brain-age-deep-learning/
+Hybrid-3D-brain-age/
 ├── README.md
+├── LICENSE
 ├── requirements.txt
 ├── .gitignore
 ├── notebooks/
@@ -123,6 +160,7 @@ brain-age-deep-learning/
     ├── models.py           # ModularCNN3D and ModularHybridCNNTransformer architectures
     ├── model_configs.py    # the 10 architecture configurations (A-J) compared in this project
     └── engine.py           # train / predict / checkpoint / plotting utilities
+└── tests/                  # synthetic-data tests for the split, models, and training loop
 ```
 
 ## Installation
@@ -152,7 +190,14 @@ before committing to a full run.
 - The healthy test set is matched to the ADHD group on age and sex only; it
   does not control for other variables (e.g. imaging site) that could also
   differ between groups.
-- Parameter counts are not matched across the hybrid (A–E) and plain-CNN
-  (F–J) families, since the hybrid's CNN extractor uses double convolutions
-  per block and the plain CNN uses single convolutions — see the per-model
-  parameter counts printed in the notebook before comparing them directly.
+- Parameter counts are matched only within A–C. D and E are much smaller,
+  and the plain-CNN family (F–J) uses one convolution per block where the
+  hybrid uses two, so compare across families with the parameter column in
+  mind.
+
+## License
+
+Released under the [MIT License](LICENSE). The license covers the code
+only. Use of the MRI data is governed by the original dataset's data use
+agreement.
+# Hybrid-3D-brain-age

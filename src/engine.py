@@ -5,6 +5,7 @@ Training, prediction, and checkpointing for the brain-age regression models.
 import copy
 import gc
 import json
+import random
 import time
 from datetime import datetime
 from pathlib import Path
@@ -15,7 +16,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from scipy.stats import pearsonr
-from torch.cuda.amp import GradScaler, autocast
+from torch.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 
 CRITERIONS = {"MSE": nn.MSELoss, "L1": nn.L1Loss, "Huber": nn.HuberLoss, "SmoothL1": nn.SmoothL1Loss}
@@ -29,10 +30,14 @@ OPTIMIZERS = {
 
 
 def set_seed(seed):
+    """Seed Python, NumPy, and PyTorch, and make cuDNN pick deterministic kernels."""
+    random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
 def plot_losses(train_losses, val_losses, title="Training and Validation Loss"):
@@ -82,7 +87,7 @@ def train(model, train_dataset, val_dataset, holdout_dataset, num_epochs=100, de
     criterion = CRITERIONS[criterion_type]()
     optimizer = OPTIMIZERS[optimizer_type](model.parameters(), lr, weight_decay)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode="min", factor=0.1, patience=10)
-    scaler = GradScaler() if (use_amp and device.type == "cuda") else None
+    scaler = GradScaler("cuda") if (use_amp and device.type == "cuda") else None
 
     def run_batches(loader, training):
         model.train() if training else model.eval()
@@ -92,7 +97,7 @@ def train(model, train_dataset, val_dataset, holdout_dataset, num_epochs=100, de
                 images, labels = images.to(device, non_blocking=True), labels.to(device, non_blocking=True)
                 if training:
                     optimizer.zero_grad()
-                with autocast(enabled=scaler is not None):
+                with autocast("cuda", enabled=scaler is not None):
                     outputs = model(images)
                     loss = criterion(outputs.squeeze(), labels)
                 if training:

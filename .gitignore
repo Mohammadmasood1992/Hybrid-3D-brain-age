@@ -24,3 +24,6 @@ env/
 # OS / editor
 .DS_Store
 .vscode/
+
+# Test cache
+.pytest_cache/
