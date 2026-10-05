@@ -200,4 +200,3 @@ before committing to a full run.
 Released under the [MIT License](LICENSE). The license covers the code
 only. Use of the MRI data is governed by the original dataset's data use
 agreement.
-# Hybrid-3D-brain-age
