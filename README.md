@@ -36,8 +36,7 @@ The dataset is access-restricted and **is not included in this repository**.
 - a `.mat` file (HDF5 / MATLAB v7.3 format) with per-row `iid` (participant
   id), `eid` (visit id), `fid` (family id), and a `7 x N` array `X` holding
   `[age, site_id, sex, ADHD1, ADHD2, ADHD3, ADHD4]`,
-- a `.npy` file with one preprocessed MRI volume per row, shape
-  `(N, 57, 57, 71)`.
+- a `.npy` file with one preprocessed MRI volume per row.
 
 ## Data splitting: avoiding leakage across visits and families
 
