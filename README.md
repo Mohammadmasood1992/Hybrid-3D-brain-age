@@ -128,7 +128,7 @@ instead:
   reproducible for a fixed seed. One test also runs the full
   `.mat` + `.npy` loading path end to end.
 - **Models and training** (`tests/test_models.py`): all ten architectures
-  return one age per scan for a 57×57×71 input, the hybrid models produce
+  return one age per scan for a 3D input, the hybrid models produce
   the token counts listed above, the metric functions are correct on a
   known case, and a two-epoch CPU training run completes.
 
